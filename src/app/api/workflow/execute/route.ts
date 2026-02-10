@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     const { env } = getRequestContext();
     const db = env.DB;
 
-    const { workflowId, parameters } = await request.json();
+    const { workflowId, parameters } = await request.json() as { workflowId: string; parameters?: Record<string, unknown> };
 
     if (!workflowId) {
       return NextResponse.json(
