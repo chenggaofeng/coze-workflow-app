@@ -17,8 +17,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { env } = getRequestContext();
-    const db = env.DB;
+    const ctx: any = getRequestContext();
+    const db = ctx.env ? ctx.env.DB : undefined;
+    
+    if (!db) {
+      return NextResponse.json(
+        { error: '数据库连接不可用' },
+        { status: 500 }
+      );
+    }
 
     // 检查用户是否已存在
     const existingUser = await getUserByUsername(db, username);

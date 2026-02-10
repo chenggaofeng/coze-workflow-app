@@ -34,8 +34,15 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const { env } = getRequestContext();
-    const db = env.DB;
+    const ctx: any = getRequestContext();
+    const db = ctx.env ? ctx.env.DB : undefined;
+    
+    if (!db) {
+      return NextResponse.json(
+        { error: '数据库连接不可用' },
+        { status: 500 }
+      );
+    }
 
     // 获取工作流列表
     const workflows = await getWorkflows(db);
