@@ -15,6 +15,7 @@ interface User {
   id: number;
   username: string;
   expired_at: string;
+  role?: string;
 }
 
 export default function HomePage() {
@@ -56,12 +57,12 @@ export default function HomePage() {
           router.push('/login');
           return;
         }
-        const data = await response.json();
-        setError(data.error || '获取工作流失败');
+        const errorData = await response.json() as { error?: string };
+        setError(errorData.error || '获取工作流失败');
         return;
       }
 
-      const data = await response.json();
+      const data = await response.json() as { workflows: Workflow[] };
       setWorkflows(data.workflows);
     } catch (err) {
       setError('网络错误');
@@ -116,6 +117,22 @@ export default function HomePage() {
                   {isExpired(user.expired_at) ? '已过期' : `剩余: ${formatExpiry(user.expired_at)}`}
                 </span>
               </div>
+            )}
+            {user?.role === 'admin' && (
+              <>
+                <Link
+                  href="/admin/workflow"
+                  className="text-sm text-purple-600 hover:text-purple-800"
+                >
+                  工作流管理
+                </Link>
+                <Link
+                  href="/admin/invite"
+                  className="text-sm text-purple-600 hover:text-purple-800"
+                >
+                  邀请码管理
+                </Link>
+              </>
             )}
             <Link
               href="/redeem"

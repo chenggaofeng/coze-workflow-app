@@ -8,6 +8,7 @@ export default function RegisterPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [inviteCode, setInviteCode] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -29,21 +30,19 @@ export default function RegisterPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ username, password, inviteCode }),
       });
 
-      const data = await response.json();
+      const data = await response.json() as { error?: string; token?: string; user?: unknown };
 
       if (!response.ok) {
         setError(data.error || '注册失败');
         return;
       }
 
-      // 保存 token
-      localStorage.setItem('token', data.token);
+      localStorage.setItem('token', data.token || '');
       localStorage.setItem('user', JSON.stringify(data.user));
 
-      // 跳转到首页
       router.push('/');
     } catch (err) {
       setError('网络错误，请重试');
@@ -102,6 +101,20 @@ export default function RegisterPage() {
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              邀请码
+            </label>
+            <input
+              type="text"
+              value={inviteCode}
+              onChange={(e) => setInviteCode(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+              placeholder="请输入邀请码"
               required
             />
           </div>

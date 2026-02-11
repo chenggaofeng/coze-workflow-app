@@ -133,7 +133,7 @@ export async function PUT(request: NextRequest) {
     const { env } = getRequestContext();
     const db = env.DB;
 
-    const { code } = await request.json();
+    const { code } = await request.json() as { code: string };
 
     if (!code) {
       return NextResponse.json(

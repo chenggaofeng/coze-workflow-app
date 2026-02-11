@@ -34,7 +34,7 @@ export default function RedeemPage() {
         body: JSON.stringify({ code }),
       });
 
-      const data = await response.json();
+      const data = await response.json() as { error?: string; message?: string; new_expired_at?: string };
 
       if (!response.ok) {
         setError(data.error || '兑换失败');
@@ -46,7 +46,7 @@ export default function RedeemPage() {
 
       // 更新本地用户信息
       const userData = localStorage.getItem('user');
-      if (userData) {
+      if (userData && data.new_expired_at) {
         const user = JSON.parse(userData);
         user.expired_at = data.new_expired_at;
         localStorage.setItem('user', JSON.stringify(user));

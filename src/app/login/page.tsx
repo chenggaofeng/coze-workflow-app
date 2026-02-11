@@ -25,7 +25,7 @@ export default function LoginPage() {
         body: JSON.stringify({ username, password }),
       });
 
-      const data = await response.json();
+      const data = await response.json() as { error?: string; token?: string; user?: unknown };
 
       if (!response.ok) {
         setError(data.error || '登录失败');
@@ -33,7 +33,7 @@ export default function LoginPage() {
       }
 
       // 保存 token
-      localStorage.setItem('token', data.token);
+      localStorage.setItem('token', data.token || '');
       localStorage.setItem('user', JSON.stringify(data.user));
 
       // 跳转到首页

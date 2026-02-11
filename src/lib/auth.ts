@@ -4,6 +4,7 @@ export interface User {
   id: number;
   username: string;
   expired_at: string;
+  role?: string;
 }
 
 export async function createToken(user: User, secret?: string): Promise<string> {
@@ -13,7 +14,8 @@ export async function createToken(user: User, secret?: string): Promise<string> 
   return new SignJWT({ 
     id: user.id, 
     username: user.username,
-    expired_at: user.expired_at 
+    expired_at: user.expired_at,
+    role: user.role || 'user',
   })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
@@ -31,6 +33,7 @@ export async function verifyToken(token: string, secret?: string): Promise<User 
       id: payload.id as number,
       username: payload.username as string,
       expired_at: payload.expired_at as string,
+      role: payload.role as string,
     };
   } catch {
     return null;

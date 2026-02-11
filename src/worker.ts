@@ -77,9 +77,10 @@ async function handleLogin(request: Request, env: Env): Promise<Response> {
     id: user.id as number,
     username: user.username as string,
     expired_at: user.expired_at as string,
+    role: user.role as string,
   }, env.JWT_SECRET);
 
-  return new Response(JSON.stringify({ success: true, token }), {
+  return new Response(JSON.stringify({ success: true, token, user: { id: user.id, username: user.username, expired_at: user.expired_at, role: user.role } }), {
     headers: {
       'Content-Type': 'application/json',
       ...corsHeaders,
@@ -92,10 +93,19 @@ async function handleRegister(request: Request, env: Env): Promise<Response> {
     return new Response(JSON.stringify({ error: '方法不允许' }), { status: 405, headers: corsHeaders });
   }
 
-  const { username, password } = await request.json() as { username: string; password: string };
+  const { username, password, inviteCode } = await request.json() as { username: string; password: string; inviteCode: string };
 
   if (!username || !password) {
     return new Response(JSON.stringify({ error: '用户名和密码不能为空' }), { status: 400, headers: corsHeaders });
+  }
+
+  if (!inviteCode) {
+    return new Response(JSON.stringify({ error: '邀请码不能为空' }), { status: 400, headers: corsHeaders });
+  }
+
+  const validInviteCode = await getInviteCode(env.DB, inviteCode);
+  if (!validInviteCode) {
+    return new Response(JSON.stringify({ error: '邀请码无效或已被使用' }), { status: 400, headers: corsHeaders });
   }
 
   const existingUser = await getUserByUsername(env.DB, username);
@@ -116,14 +126,17 @@ async function handleRegister(request: Request, env: Env): Promise<Response> {
 
   const newUser = await getUserByUsername(env.DB, username);
 
+  await useInviteCode(env.DB, validInviteCode.id as number, newUser!.id as number);
+
   const { createToken } = await import('./lib/auth');
   const token = await createToken({
     id: newUser!.id as number,
     username: newUser!.username as string,
     expired_at: newUser!.expired_at as string,
+    role: newUser!.role as string,
   }, env.JWT_SECRET);
 
-  return new Response(JSON.stringify({ success: true, token }), {
+  return new Response(JSON.stringify({ success: true, token, user: { id: newUser!.id, username: newUser!.username, expired_at: newUser!.expired_at, role: newUser!.role } }), {
     headers: {
       'Content-Type': 'application/json',
       ...corsHeaders,
@@ -253,19 +266,19 @@ async function handleInviteRedeem(request: Request, env: Env): Promise<Response>
     return new Response(JSON.stringify({ error: '邀请码无效' }), { status: 404, headers: corsHeaders });
   }
 
-  if (inviteCode.used) {
+  if (inviteCode.is_used) {
     return new Response(JSON.stringify({ error: '邀请码已使用' }), { status: 409, headers: corsHeaders });
   }
 
-  const result = await useInviteCode(env.DB, code, user.id as number);
+  const currentExpiredAt = new Date(user.expired_at);
+  const now = new Date();
+  const baseTime = currentExpiredAt > now ? currentExpiredAt : now;
+  baseTime.setHours(baseTime.getHours() + (inviteCode.duration_hours as number));
 
-  if (!result.success) {
-    return new Response(JSON.stringify({ error: '兑换失败' }), { status: 500, headers: corsHeaders });
-  }
+  await useInviteCode(env.DB, inviteCode.id as number, user.id as number);
+  await updateUserExpiry(env.DB, user.id as number, baseTime.toISOString());
 
-  await updateUserExpiry(env.DB, user.id as number);
-
-  return new Response(JSON.stringify({ success: true, message: '兑换成功' }), {
+  return new Response(JSON.stringify({ success: true, message: '兑换成功', new_expired_at: baseTime.toISOString() }), {
     headers: {
       'Content-Type': 'application/json',
       ...corsHeaders,
