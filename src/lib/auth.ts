@@ -1,16 +1,15 @@
 import { SignJWT, jwtVerify } from 'jose';
 
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'your-secret-key-minimum-32-characters-long'
-);
-
 export interface User {
   id: number;
   username: string;
   expired_at: string;
 }
 
-export async function createToken(user: User): Promise<string> {
+export async function createToken(user: User, secret?: string): Promise<string> {
+  const JWT_SECRET = new TextEncoder().encode(
+    secret || 'your-secret-key-minimum-32-characters-long'
+  );
   return new SignJWT({ 
     id: user.id, 
     username: user.username,
@@ -22,8 +21,11 @@ export async function createToken(user: User): Promise<string> {
     .sign(JWT_SECRET);
 }
 
-export async function verifyToken(token: string): Promise<User | null> {
+export async function verifyToken(token: string, secret?: string): Promise<User | null> {
   try {
+    const JWT_SECRET = new TextEncoder().encode(
+      secret || 'your-secret-key-minimum-32-characters-long'
+    );
     const { payload } = await jwtVerify(token, JWT_SECRET);
     return {
       id: payload.id as number,
