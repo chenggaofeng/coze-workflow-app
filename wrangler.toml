@@ -8,3 +8,4 @@ database_id = "58f3ec7c-9c46-4af8-970c-cd5ec5dff5e8"
 
 [vars]
 JWT_SECRET = "your-secret-key-minimum-32-characters-long-for-jwt-signing"
+COZE_API_KEY = "cztei_qNUuV0APbfIyZQpUqsvb3hs38yiP8R5lBM5tLF16yFpf9C0yxCPmsFXNC17bHyojO"
