@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 调用 Coze API
-    const cozeApiKey = env.COZE_API_KEY;
+    const cozeApiKey = ctx.env?.COZE_API_KEY;
     if (!cozeApiKey) {
       return NextResponse.json(
         { error: 'Coze API Key 未配置' },
