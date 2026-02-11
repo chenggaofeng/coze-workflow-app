@@ -25,7 +25,14 @@ export default {
     }
 
     // 路由处理
-    if (path === '/api/auth/login') {
+    if (path === '/') {
+      return new Response(getRootPage(), {
+        headers: {
+          'Content-Type': 'text/html; charset=utf-8',
+          ...corsHeaders,
+        },
+      });
+    } else if (path === '/api/auth/login') {
       return handleLogin(request, env);
     } else if (path === '/api/auth/register') {
       return handleRegister(request, env);
@@ -264,4 +271,150 @@ async function handleInviteRedeem(request: Request, env: Env): Promise<Response>
       ...corsHeaders,
     },
   });
+}
+
+function getRootPage(): string {
+  return `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Coze 工作流 API</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    h1 {
+      color: #2563eb;
+      border-bottom: 2px solid #2563eb;
+      padding-bottom: 10px;
+    }
+    h2 {
+      color: #1e40af;
+      margin-top: 30px;
+    }
+    .endpoint {
+      background: white;
+      padding: 15px;
+      margin: 10px 0;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .method {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-weight: bold;
+      font-size: 12px;
+      margin-right: 10px;
+    }
+    .get { background: #22c55e; color: white; }
+    .post { background: #3b82f6; color: white; }
+    code {
+      background: #f3f4f6;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+    }
+    pre {
+      background: #1e293b;
+      color: #e2e8f0;
+      padding: 15px;
+      border-radius: 8px;
+      overflow-x: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>Coze 工作流 API</h1>
+  <p>欢迎使用 Coze 工作流 API。以下是可用的 API 端点：</p>
+
+  <h2>认证端点</h2>
+  
+  <div class="endpoint">
+    <span class="method post">POST</span>
+    <strong>/api/auth/register</strong>
+    <p>用户注册</p>
+    <pre>{
+  "username": "string",
+  "password": "string"
+}</pre>
+  </div>
+
+  <div class="endpoint">
+    <span class="method post">POST</span>
+    <strong>/api/auth/login</strong>
+    <p>用户登录，返回 JWT token</p>
+    <pre>{
+  "username": "string",
+  "password": "string"
+}</pre>
+  <p>响应：<code>{"success": true, "token": "jwt_token"}</code></p>
+  </div>
+
+  <h2>工作流端点</h2>
+  
+  <div class="endpoint">
+    <span class="method get">GET</span>
+    <strong>/api/workflow/list</strong>
+    <p>获取工作流列表（需要认证）</p>
+    <p>请求头：<code>Authorization: Bearer {token}</code></p>
+  </div>
+
+  <div class="endpoint">
+    <span class="method post">POST</span>
+    <strong>/api/workflow/execute</strong>
+    <p>执行工作流（需要认证）</p>
+    <p>请求头：<code>Authorization: Bearer {token}</code></p>
+    <pre>{
+  "workflowId": "number",
+  "parameters": {}
+}</pre>
+  </div>
+
+  <h2>邀请码端点</h2>
+  
+  <div class="endpoint">
+    <span class="method post">POST</span>
+    <strong>/api/invite/redeem</strong>
+    <p>兑换邀请码（需要认证）</p>
+    <p>请求头：<code>Authorization: Bearer {token}</code></p>
+    <pre>{
+  "code": "string"
+}</pre>
+  </div>
+
+  <h2>使用示例</h2>
+  <pre>
+// 1. 注册用户
+POST /api/auth/register
+{
+  "username": "testuser",
+  "password": "password123"
+}
+
+// 2. 登录获取 token
+POST /api/auth/login
+{
+  "username": "testuser",
+  "password": "password123"
+}
+// 返回: {"success": true, "token": "eyJhbGc..."}
+
+// 3. 使用 token 访问其他 API
+GET /api/workflow/list
+Headers: Authorization: Bearer eyJhbGc...
+  </pre>
+
+  <p style="margin-top: 30px; color: #666;">
+    <small>注意：所有请求都需要设置 CORS 头。在生产环境中，请将 JWT_SECRET 替换为安全的密钥。</small>
+  </p>
+</body>
+</html>`;
 }
